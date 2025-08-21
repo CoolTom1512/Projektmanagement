@@ -64,7 +64,6 @@ hr {
 }
 
 /*Header*/
-
 header {
     width: 100%;
     height: auto;
@@ -93,7 +92,6 @@ nav a {
 }
 
 /*Main page*/
-
 .wrapper {
     display: flex;
     flex-direction: row;
