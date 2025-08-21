@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link href="/css/sites/tools/school.css" rel="stylesheet" type="text/css" media="all" />
+</head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+<body>
+    <header>
+
+        <nav>
+            <img src="/images/lotus.png" width="100px">
+            <a href="#">Dashboard</a>
+            <a href="#">Aufträge</a>
+            <a href="#">Inventar</a>
+            <a href="#">Mitarbeiter</a>
+        </nav>
+    </header>
+
+    <div class="wrapper">
+        <aside class="sidebar">
+            <ul>
+                <li>Kunde A</li>
+                <li>Kunde B</li>
+                <li>Kunde C</li>
+                <li>Kunde D</li>
+                <li><input type="text" placeholder="Suche..."></li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <div class="container">
+                <div class="Chart">
+                    <canvas id="myChart" style="width:100%;max-width:1000px;display:unset;"></canvas>
+
+                    <!--
+                    <div class="chart">
+                        <div class="chart-label">
+                            <p>Offene Bestellungen</p>
+                            <p>12%</p>
+                            <p>Offene Aufträge</p>
+                            <p>25%</p>
+                            <p>Abgeschlossene Aufträge</p>
+                            <p>62.5%</p>
+                        </div>
+                    </div>
+                    -->
+                </div>
+
+                <div class="Rating">
+                    <div>★★★★☆</div>
+                </div>
+                <div class="Dashboard">
+                    <h1><u>Dashboard</u></h1>
+                    <p>Kunde A</p>
+                </div>
+                <div class="Contact">
+                    <p>
+                        Geschäftsführung: Frau Marie Müller
+                        <br>+49 1603 1234 - 567 &nbsp MM@KundeA.de
+                        <br>
+                        <br>Kontaktperson: Herr Daniel Schmidt
+                        <br>+49 1603 1234 - 568 &nbsp DS@KundeA.de
+                    </p>
+                </div>
+                <div class="CurrentActivity">
+                    <div class="Deadlines">
+                        <h3>Deadlines:</h3>
+                        <p>Projekt C - 24.07.2025</p>
+                        <p>Projekt D - 27.08.2025</p>
+                        <p>Projekt E - 29.08.2025</p>
+                    </div>
+                    <div class="Planned">
+                        <h3>In Planung:</h3>
+                        <p>Projekt F - Warte auf Rückmeldung</p>
+                        <p>Projekt G - Interne Besprechung</p>
+                    </div>
+                    <div class="OpenReciptes">
+                        <h3>Offene Rechnungen:</h3>
+                        <p>Projekt A</p>
+                        <p>Projekt B</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const xValues = ["Abgeschlossene Aufträge", "Offene Aufträge", "Offene Bestellungen"];
+        const yValues = [63, 25, 12];
+        const barColors = [
+            "#66ff73",
+            "#ff9a17",
+            "#66b8ff"
+        ];
+
+        new Chart("myChart", {
+            type: "pie",
+            data: {
+                labels: xValues,
+                datasets: [{
+                    backgroundColor: barColors,
+                    data: yValues
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: ""
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: {
+                                size: 40
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+    <!--
+    <script>
+        // Dynamische Datenaktualisierung
+        function updateData() {
+            const deadlines = [
+                { name: "Projekt C", date: "24.07.2025" },
+                { name: "Projekt D", date: "27.08.2025" },
+                { name: "Projekt E", date: "29.08.2025" }
+            ];
+            const inPlanning = [
+                { name: "Projekt F", status: "Warte auf Rückmeldung" },
+                { name: "Projekt G", status: "Interne Besprechung" }
+            ];
+            const invoices = ["Projekt A", "Projekt B"];
+
+            // Beispielhafte Aktualisierung (kann durch API-Daten ersetzt werden)
+            const deadlineList = document.querySelectorAll(".section p:nth-child(n+2):nth-child(-n+4)");
+            deadlines.forEach((item, index) => {
+                deadlineList[index].textContent = `${item.name} - ${item.date}`;
+            });
+
+            const planningList = document.querySelectorAll(".section p:nth-child(n+6):nth-child(-n+7)");
+            inPlanning.forEach((item, index) => {
+                planningList[index].textContent = `${item.name} - ${item.status}`;
+            });
+
+            const invoiceList = document.querySelectorAll(".section p:nth-child(n+9)");
+            invoices.forEach((item, index) => {
+                invoiceList[index].textContent = item;
+            });
+
+            // Dynamisches Diagramm (statisch, aber anpassbar)
+            const chart = document.querySelector(".chart");
+            const percentages = [12, 25, 62.5];
+            chart.style.background = `conic-gradient(#4CAF50 0% ${percentages[2]}%, #FF9800 ${percentages[2]}% ${percentages[2] + percentages[1]}%, #2196F3 ${percentages[2] + percentages[1]}% 100%)`;
+        }
+
+        // Initialer Aufruf und regelmäßige Aktualisierung
+        updateData();
+        setInterval(updateData, 5000); // Alle 5 Sekunden aktualisieren
+    </script>
+    -->
+</body>
+
+</html>

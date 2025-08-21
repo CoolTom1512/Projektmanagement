@@ -1,0 +1,251 @@
+body {
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+    width: 100%;
+
+    padding: 0;
+    margin: 0;
+
+    color: #000000;
+    font-family: "Droid Sans", Verdana, sans-serif;
+    line-height: 150%;
+}
+
+/*Basic element tweaks*/
+a {
+    color: #0783b9;
+}
+
+a:hover {
+    color: #e0ffff;
+    transition: ease-in 0.5s ease-out 0.5s;
+}
+
+b,
+strong {
+    color: #c0feff;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+.nav {
+    font-family: "Palatino", Garamond, serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+    line-height: 125%;
+}
+
+blockquote {
+    border-left: 2px solid #aaf0ff;
+    padding: 0.1px 0.75em;
+    margin-left: 1.25em;
+    background: rgba(250, 255, 255, 0.1);
+}
+
+hr {
+    width: 90%;
+    height: 1px;
+
+    margin: 1.75rem auto;
+    align-self: center;
+
+    border: 0;
+    background: #000000;
+}
+
+/*Header*/
+
+header {
+    width: 100%;
+    height: auto;
+}
+
+nav {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+
+    margin: 10px 0px 10px 0px;
+}
+
+nav a {
+    height: 100%;
+    width: 100%;
+    background-color: #3b5998;
+
+    padding: 10px 20px;
+    margin: 0px 20px;
+    border-radius: 5px;
+
+    text-align: center;
+    color: #fff;
+    text-decoration: none;
+}
+
+/*Main page*/
+
+.wrapper {
+    display: flex;
+    flex-direction: row;
+
+    width: 100%;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 200px;
+    height: 100%;
+    background-color: #2a1b3d;
+    color: #fff;
+    padding: 0px 10px;
+    border-radius: 0px 10px 10px 0px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0px;
+
+    text-align: center;
+}
+
+.sidebar ul li {
+    margin: 10px 0px;
+
+    width: 100%;
+}
+
+.sidebar ul li a {
+    color: #d3c0e0;
+    text-decoration: none;
+}
+
+.content {
+    width: 100%;
+    height: 100%;
+
+    padding: 0px 20px;
+    background-color: #fff;
+}
+
+.chart {
+    width: 600px;
+    height: 600px;
+    background: conic-gradient(#4CAF50 0% 62.5%, #FF9800 62.5% 87.5%, #2196F3 87.5% 100%);
+    border-radius: 50%;
+    position: relative;
+    margin: 0 auto;
+}
+
+.chart-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #000;
+}
+
+.section {
+    margin-top: 20px;
+}
+
+.container {
+    height: 100%;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 2fr 1fr;
+    gap: 5px 5px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "Rating Dashboard Contact"
+        "Chart Chart Chart"
+        "CurrentActivity CurrentActivity CurrentActivity";
+}
+
+.Chart {
+    grid-area: Chart;
+
+    text-align: center;
+    align-content: center;
+}
+
+.Rating {
+    grid-area: Rating;
+
+    text-align: center;
+    align-content: center;
+
+    font-size: 50px;
+}
+
+.Dashboard {
+    grid-area: Dashboard;
+
+    text-align: center;
+    align-content: start;
+
+    font-size: 25px;
+}
+
+.Dashboard h1, p{
+    margin: 0px;
+}
+
+.Contact {
+    grid-area: Contact;
+
+    text-align: center;
+    align-content: center;
+
+    font-weight: bold;
+}
+
+.CurrentActivity {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "Deadlines Planned OpenReciptes";
+    grid-area: CurrentActivity;
+}
+
+.Deadlines {
+    grid-area: Deadlines;
+
+    text-align: center;
+    align-content: center;
+}
+
+.Planned {
+    grid-area: Planned;
+
+    text-align: center;
+    align-content: center;
+}
+
+.OpenReciptes {
+    grid-area: OpenReciptes;
+
+    text-align: center;
+    align-content: center;
+}
+
+/*img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}*/
