@@ -14,7 +14,7 @@
     <header>
         <nav>
             <img src="/images/lotus.png" width="100px">
-            <a href="#">Dashboard</a>
+            <a href="#" class="mylink">Dashboard</a>
             <a href="#">Aufträge</a>
             <a href="#">Inventar</a>
             <a href="#">Mitarbeiter</a>
@@ -53,6 +53,8 @@
 
                 <div class="Rating">
                     <div>★★★★☆</div>
+                     <button onclick="testFunktion()">Test</button>
+                     <p id="demo"></p>
                 </div>
                 <div class="Dashboard">
                     <h1><u>Dashboard</u></h1>
@@ -123,6 +125,22 @@
                 }
             }
         });
+    </script>
+
+    <script>
+        function testFunktion() {
+            if(x == undefined){
+                let x = 0;
+            }
+            document.getElementById("demo").innerHTML = x;
+            x = x + 1;
+        }
+    </script>
+
+    <script>
+        let link = document.querySelector(".mylink");
+        link.addEventListener("click", function(e) {link.textContent = "Test"})
+        
     </script>
 
     <!--
