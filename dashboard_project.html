@@ -1,9 +1,50 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <title>Clickdummy Dashboard</title>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; display: flex; }
     .sidebar { width: 220px; background: #4b0082; color: white; padding: 20px 10px; height: 100vh; transition: width 0.3s; overflow: hidden; }
@@ -32,11 +73,14 @@
     .actions input[type="text"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
     .actions button { padding: 8px 12px; border: none; border-radius: 6px; background: #007bff; color: #fff; cursor: pointer; }
     .actions button:hover { background: #0056b3; }
+    .editable-row td { background: #f9f9f9; }
+    .editable-row input { width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+    .remove-row { background: #ff4444; color: white; padding: 2px 6px; border: none; border-radius: 4px; cursor: pointer; }
+    .remove-row:hover { background: #cc0000; }
   </style>
 </head>
 <body>
   <div class="sidebar" id="sidebar">
-    <button class="toggle-btn" id="toggleSidebar">☰</button>
     <h3>Kunden</h3>
     <ul>
       <li onclick="loadCustomer('A')">Kunde A</li>
@@ -97,7 +141,7 @@
         </div>
         <div class="actions">
           <input type="text" id="searchAuftraege" placeholder="Suchen...">
-          <button>Neuer Auftrag</button>
+          <button onclick="addNewRow('auftraege')">Neuer Auftrag</button>
           <button>CSV Import</button>
         </div>
         <div class="card">
@@ -115,7 +159,7 @@
         </div>
         <div class="actions">
           <input type="text" id="searchInventar" placeholder="Suchen...">
-          <button>Neuer Artikel</button>
+          <button onclick="addNewRow('inventar')">Neuer Artikel</button>
           <button>CSV Import</button>
         </div>
         <div class="card">
@@ -133,7 +177,7 @@
         </div>
         <div class="actions">
           <input type="text" id="searchMitarbeiter" placeholder="Suchen...">
-          <button>Neuer Mitarbeiter</button>
+          <button onclick="addNewRow('mitarbeiter')">Neuer Mitarbeiter</button>
           <button>CSV Import</button>
         </div>
         <div class="card">
@@ -147,8 +191,6 @@
   <script>
     const buttons = document.querySelectorAll("nav button");
     const views = document.querySelectorAll(".view");
-    const sidebar = document.getElementById("sidebar");
-    const toggleSidebar = document.getElementById("toggleSidebar");
 
     buttons.forEach(btn => {
       btn.addEventListener("click", () => {
@@ -158,8 +200,6 @@
         document.getElementById(btn.id.replace("btn-", "")).style.display = "block";
       });
     });
-
-    toggleSidebar.addEventListener("click", () => { sidebar.classList.toggle("collapsed"); });
 
     const customers = {
       A: {
@@ -178,40 +218,150 @@
           ["Max Mustermann", "Projektleiter", "IT", "Aktiv", "max@firma.de", "+49 160 123456", "01.01.2020", "Frau Müller"]
         ],
         chart: [8, 12]
+      },
+      B: {
+        aktuelles: "Neue IT-Infrastruktur in Planung",
+        deadlines: ["Projekt A1 – 01.09.2025", "Projekt A2 – 15.09.2025"],
+        planung: ["Projekt A3 – Angebotsphase"],
+        auftraege: [
+          ["A-2025-001", "Website Redesign", "In Bearbeitung", "Webentwicklung", "€12.500", "01.08.2025", "01.12.2025", "Herr Schmidt"],
+          ["A-2025-002", "SEO Optimierung", "Warten auf Kunde", "Marketing", "€3.500", "15.08.2025", "30.09.2025", "Frau Keller"]
+        ],
+        inventar: [
+          ["ART-001", "Laptop Dell XPS 13", "Hardware", "15 Stück", "Verfügbar", "€1.200", "€1.500", "Dell GmbH"],
+          ["ART-002", "Monitor 24 Zoll", "Hardware", "3 Stück", "Niedrig", "€200", "€350", "Samsung"]
+        ],
+        mitarbeiter: [
+          ["Max Mustermann", "Projektleiter", "IT", "Aktiv", "max@firma.de", "+49 160 123456", "01.01.2020", "Frau Müller"]
+        ],
+        chart: [10, 0]
+      },
+      C: {
+        aktuelles: "Neue IT-Infrastruktur in Planung",
+        deadlines: ["Projekt A1 – 01.09.2025", "Projekt A2 – 15.09.2025"],
+        planung: ["Projekt A3 – Angebotsphase"],
+        auftraege: [
+          ["A-2025-001", "Website Redesign", "In Bearbeitung", "Webentwicklung", "€12.500", "01.08.2025", "01.12.2025", "Herr Schmidt"],
+          ["A-2025-002", "SEO Optimierung", "Warten auf Kunde", "Marketing", "€3.500", "15.08.2025", "30.09.2025", "Frau Keller"]
+        ],
+        inventar: [
+          ["ART-001", "Laptop Dell XPS 13", "Hardware", "15 Stück", "Verfügbar", "€1.200", "€1.500", "Dell GmbH"],
+          ["ART-002", "Monitor 24 Zoll", "Hardware", "3 Stück", "Niedrig", "€200", "€350", "Samsung"]
+        ],
+        mitarbeiter: [
+          ["Max Mustermann", "Projektleiter", "IT", "Aktiv", "max@firma.de", "+49 160 123456", "01.01.2020", "Frau Müller"]
+        ],
+        chart: [5, 7]
+      },
+      D: {
+        aktuelles: "Neue IT-Infrastruktur in Planung",
+        deadlines: ["Projekt A1 – 01.09.2025", "Projekt A2 – 15.09.2025"],
+        planung: ["Projekt A3 – Angebotsphase"],
+        auftraege: [
+          ["A-2025-001", "Website Redesign", "In Bearbeitung", "Webentwicklung", "€12.500", "01.08.2025", "01.12.2025", "Herr Schmidt"],
+          ["A-2025-002", "SEO Optimierung", "Warten auf Kunde", "Marketing", "€3.500", "15.08.2025", "30.09.2025", "Frau Keller"]
+        ],
+        inventar: [
+          ["ART-001", "Laptop Dell XPS 13", "Hardware", "15 Stück", "Verfügbar", "€1.200", "€1.500", "Dell GmbH"],
+          ["ART-002", "Monitor 24 Zoll", "Hardware", "3 Stück", "Niedrig", "€200", "€350", "Samsung"]
+        ],
+        mitarbeiter: [
+          ["Max Mustermann", "Projektleiter", "IT", "Aktiv", "max@firma.de", "+49 160 123456", "01.01.2020", "Frau Müller"]
+        ],
+        chart: [2, 1]
       }
     };
 
     let currentChart;
     function loadCustomer(key) {
       const c = customers[key];
+      
       document.getElementById("aktuelles").textContent = c.aktuelles;
       document.getElementById("deadlines").innerHTML = c.deadlines.map(d => `<li>${d}</li>`).join("");
       document.getElementById("planung").innerHTML = c.planung.map(p => `<li>${p}</li>`).join("");
 
-      document.getElementById("auftraegeTable").innerHTML = `
-        <tr><th>Auftragsnummer</th><th>Titel</th><th>Status</th><th>Kategorie</th><th>Betrag</th><th>Startdatum</th><th>Enddatum</th><th>Verantwortlicher</th><th>Dateien</th></tr>
-        ${c.auftraege.map(a => `<tr>${a.map(v => `<td>${v}</td>`).join("")}<td><input type='file'></td></tr>`).join("")}`;
-
-      document.getElementById("inventarTable").innerHTML = `
-        <tr><th>Artikel-Nr.</th><th>Name</th><th>Kategorie</th><th>Bestand</th><th>Status</th><th>Preis</th><th>Verkaufspreis</th><th>Lieferant</th></tr>
-        ${c.inventar.map(i => `<tr>${i.map(v => `<td>${v}</td>`).join("")}</tr>`).join("")}`;
-
-      document.getElementById("mitarbeiterTable").innerHTML = `
-        <tr><th>Name</th><th>Position</th><th>Abteilung</th><th>Status</th><th>E-Mail</th><th>Telefon</th><th>Eintrittsdatum</th><th>Vorgesetzter</th></tr>
-        ${c.mitarbeiter.map(m => `<tr>${m.map(v => `<td>${v}</td>`).join("")}</tr>`).join("")}`;
+      renderTable('auftraege', c.auftraege);
+      renderTable('inventar', c.inventar);
+      renderTable('mitarbeiter', c.mitarbeiter);
 
       if (currentChart) currentChart.destroy();
+
       const ctx = document.getElementById('auftraegeChart');
+
       currentChart = new Chart(ctx, {
         type: 'pie',
         data: { labels: ['Offen', 'Beendet'], datasets: [{ data: c.chart, backgroundColor: ['#ff9800', '#4caf50'] }] },
         options: { responsive: false, maintainAspectRatio: false }
       });
 
-      // KPI Werte füllen (Beispiel)
+      updateKPIs(c);
+    }
+
+    function renderTable(type, data) {
+      const table = document.getElementById(`${type}Table`);
+      let headers = [];
+      let editable = false;
+
+      if (type === 'auftraege') {
+        headers = ["Auftragsnummer", "Titel", "Status", "Kategorie", "Betrag", "Startdatum", "Enddatum", "Verantwortlicher", "Dateien"];
+        table.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>`;
+        data.forEach(row => {
+          table.innerHTML += `<tr>${row.map(v => `<td>${v}</td>`).join("")}<td><input type='file'></td><td><button class="remove-row" onclick="removeRow(this, 'auftraege')">X</button></td></tr>`;
+        });
+      } else if (type === 'inventar') {
+        headers = ["Artikel-Nr.", "Name", "Kategorie", "Bestand", "Status", "Preis", "Verkaufspreis", "Lieferant"];
+        table.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>`;
+        data.forEach(row => {
+          table.innerHTML += `<tr>${row.map(v => `<td>${v}</td>`).join("")}<td><button class="remove-row" onclick="removeRow(this, 'inventar')">X</button></td></tr>`;
+        });
+      } else if (type === 'mitarbeiter') {
+        headers = ["Name", "Position", "Abteilung", "Status", "E-Mail", "Telefon", "Eintrittsdatum", "Vorgesetzter"];
+        table.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>`;
+        data.forEach(row => {
+          table.innerHTML += `<tr>${row.map(v => `<td>${v}</td>`).join("")}<td><button class="remove-row" onclick="removeRow(this, 'mitarbeiter')">X</button></td></tr>`;
+        });
+      }
+    }
+
+    function addNewRow(type) {
+      const table = document.getElementById(`${type}Table`);
+      let headers = [];
+      if (type === 'auftraege') {
+        headers = ["Auftragsnummer", "Titel", "Status", "Kategorie", "Betrag", "Startdatum", "Enddatum", "Verantwortlicher"];
+        const newRow = document.createElement('tr');
+        newRow.className = 'editable-row';
+        newRow.innerHTML = headers.map(h => `<td><input type="text" placeholder="${h}"></td>`).join("") + '<td><input type="file"></td><td><button class="remove-row" onclick="removeRow(this, \'auftraege\')">X</button></td>';
+        table.appendChild(newRow);
+        customers[Object.keys(customers)[0]][type].push([]);
+      } else if (type === 'inventar') {
+        headers = ["Artikel-Nr.", "Name", "Kategorie", "Bestand", "Status", "Preis", "Verkaufspreis", "Lieferant"];
+        const newRow = document.createElement('tr');
+        newRow.className = 'editable-row';
+        newRow.innerHTML = headers.map(h => `<td><input type="text" placeholder="${h}"></td>`).join("") + '<td><button class="remove-row" onclick="removeRow(this, \'inventar\')">X</button></td>';
+        table.appendChild(newRow);
+        customers[Object.keys(customers)[0]][type].push([]);
+      } else if (type === 'mitarbeiter') {
+        headers = ["Name", "Position", "Abteilung", "Status", "E-Mail", "Telefon", "Eintrittsdatum", "Vorgesetzter"];
+        const newRow = document.createElement('tr');
+        newRow.className = 'editable-row';
+        newRow.innerHTML = headers.map(h => `<td><input type="text" placeholder="${h}"></td>`).join("") + '<td><button class="remove-row" onclick="removeRow(this, \'mitarbeiter\')">X</button></td>';
+        table.appendChild(newRow);
+        customers[Object.keys(customers)[0]][type].push([]);
+      }
+      updateKPIs(customers[Object.keys(customers)[0]]);
+    }
+
+    function removeRow(button, type) {
+      const row = button.parentElement.parentElement;
+      row.parentElement.removeChild(row);
+      customers[Object.keys(customers)[0]][type].splice(row.rowIndex - 1, 1);
+      updateKPIs(customers[Object.keys(customers)[0]]);
+    }
+
+    function updateKPIs(c) {
       document.getElementById("auftraegeGesamt").textContent = c.auftraege.length;
       document.getElementById("auftraegeAktiv").textContent = c.auftraege.filter(a => a[2] !== "Beendet").length;
-      document.getElementById("auftraegeWert").textContent = "€" + c.auftraege.filter(a => a[2] !== "Beendet").reduce((sum, a) => sum + parseFloat(a[4].replace(/[^0-9.-]+/g, "")), 0);
+      document.getElementById("auftraegeWert").textContent = "€" + c.auftraege.filter(a => a[2] !== "Beendet").reduce((sum, a) => sum + parseFloat(a[4].replace(/[^0-9.-]+/g, "") || 0), 0);
 
       document.getElementById("inventarGesamt").textContent = c.inventar.length;
       document.getElementById("inventarNiedrig").textContent = c.inventar.filter(i => i[4] === "Niedrig").length;
