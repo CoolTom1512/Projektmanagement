@@ -1,3 +1,8 @@
+// =================== Helper =============================================
+function confirmDelete(msg = "Diesen Eintrag wirklich löschen?") {
+  return confirm(msg);
+}
+
 // =================== Demo-Daten =========================================
 const customers = {
   A: {
@@ -65,31 +70,29 @@ function renderCustomerList() {
   Object.keys(customers).forEach(key=>{
     const li = document.createElement('li');
 
-    // Name
+    // Name klickbar
     const span = document.createElement('span');
     span.textContent = `${key} · ${customers[key].name || 'Kunde'}`;
     span.style.cursor = "pointer";
     span.addEventListener('click', ()=> loadCustomer(key));
     li.appendChild(span);
 
-    // Löschen-Button
+    // Löschen-Button (mit Bestätigung)
     const rm = document.createElement('button');
     rm.className = 'btn btn-ghost btn-sm';
     rm.textContent = '✕';
     rm.style.marginLeft = '6px';
     rm.addEventListener('click', (e)=>{
-      e.stopPropagation(); // nicht loadCustomer triggern
-      if (confirm(`Kunde "${customers[key].name}" wirklich löschen?`)) {
-        delete customers[key];
-        // neuen aktuellen Kunden laden, falls der aktive gelöscht wurde
-        const restKeys = Object.keys(customers);
-        if (restKeys.length > 0) {
-          loadCustomer(restKeys[0]);
-        } else {
-          currentKey = null;
-          currentCustomer = null;
-          ul.innerHTML = '<li><em>Keine Kunden mehr</em></li>';
-        }
+      e.stopPropagation();
+      if (!confirmDelete(`Kunde "${customers[key].name || key}" wirklich löschen?`)) return;
+      delete customers[key];
+      const restKeys = Object.keys(customers);
+      if (restKeys.length > 0) {
+        loadCustomer(restKeys[0]);
+      } else {
+        currentKey = null;
+        currentCustomer = null;
+        ul.innerHTML = '<li><em>Keine Kunden mehr</em></li>';
       }
     });
     li.appendChild(rm);
@@ -98,7 +101,6 @@ function renderCustomerList() {
     ul.appendChild(li);
   });
 }
-
 
 document.getElementById('btnAddCustomer').addEventListener('click', ()=>{
   const name = prompt("Name des neuen Kunden?");
@@ -129,6 +131,7 @@ function renderSimpleList(ulId, arr){
     rm.textContent = '✕';
     rm.style.marginLeft = '6px';
     rm.addEventListener('click', ()=>{
+      if (!confirmDelete()) return;
       arr.splice(i,1);
       renderSimpleList(ulId, arr);
       updateKPIs(currentCustomer);
@@ -151,6 +154,7 @@ function renderContactsList(contacts){
     rm.textContent = '✕';
     rm.style.marginLeft = '6px';
     rm.addEventListener('click', ()=>{
+      if (!confirmDelete("Diesen Kontakt wirklich löschen?")) return;
       contacts.splice(i,1);
       renderContactsList(contacts);
       updateKPIs(currentCustomer);
@@ -206,6 +210,7 @@ function renderCalendarList(){
     rm.textContent = '✕';
     rm.style.marginLeft = '6px';
     rm.addEventListener('click', ()=>{
+      if (!confirmDelete("Diesen Kalendereintrag wirklich löschen?")) return;
       const idx = currentCustomer.calendar.findIndex(e=> e.date===ev.date && e.title===ev.title);
       if (idx>-1) currentCustomer.calendar.splice(idx,1);
       renderCalendarList();
@@ -234,29 +239,28 @@ function renderChart(cust){
     data:{ labels:['Offen','Beendet'], datasets:[{ data }] },
     options:{
       responsive:true,
-      maintainAspectRatio:false, /* -> nutzt chart-wrap Höhe */
+      maintainAspectRatio:false,
       cutout:'55%',
       plugins:{
         tooltip:{ enabled:false },
         legend:{ position:'bottom' },
         datalabels:{
-  formatter:(value,ctx)=>{
-    const label = ctx.chart.data.labels[ctx.dataIndex];
-    const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0) || 1;
-    const pct = Math.round((value*100)/sum);
-    return `${label}\n${pct}%`;
-  },
-  anchor:'center',
-  align:'center',
-  textAlign:'center',
-  color:'#f8faff',                // hellere Schrift
-  font:{ weight:'bold', size:12 }, // größer, fetter
-  textStrokeColor:'#000',         
-  textStrokeWidth:1.5,              // sorgt für Kontrast
-  shadowBlur:4,                   // weicher Shadow
-  shadowColor:'rgba(0,0,0,.8)'    // dunkler Schatten für besseren Kontrast
-}
-
+          formatter:(value,ctx)=>{
+            const label = ctx.chart.data.labels[ctx.dataIndex];
+            const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0) || 1;
+            const pct = Math.round((value*100)/sum);
+            return `${label}\n${pct}%`;
+          },
+          anchor:'center',
+          align:'center',
+          textAlign:'center',
+          color:'#f8faff',
+          font:{ weight:'bold', size:12 },
+          textStrokeColor:'#000',
+          textStrokeWidth:1.5,
+          shadowBlur:4,
+          shadowColor:'rgba(0,0,0,.8)'
+        }
       }
     },
     plugins:[ChartDataLabels]
@@ -345,7 +349,8 @@ function renderOrdersTable(data){
     // Status
     const tdStatus = document.createElement('td');
     const sel = document.createElement('select');
-    ['Offen','In Arbeit','Beendet'].forEach(s=>{
+    // -> hier kannst du beliebig weitere Stati ergänzen
+    ['Offen','In Planung','In Arbeit','Beendet','Wartet auf Kunde','Abgelehnt'].forEach(s=>{
       const opt = document.createElement('option'); opt.value=s; opt.textContent=s;
       if ((row[3]||'').toLowerCase() === s.toLowerCase()) opt.selected = true;
       sel.appendChild(opt);
@@ -366,7 +371,11 @@ function renderOrdersTable(data){
         const a = document.createElement('a'); a.href = f.url; a.download = f.name; a.textContent = f.name;
         a.style.marginRight = '6px';
         const rm = document.createElement('button'); rm.className='btn btn-ghost btn-sm'; rm.textContent='✕';
-        rm.addEventListener('click', ()=>{ row[4].splice(idx,1); renderFiles(); });
+        rm.addEventListener('click', ()=>{
+          if (!confirmDelete("Diesen Anhang wirklich löschen?")) return;
+          row[4].splice(idx,1);
+          renderFiles();
+        });
         const wrap = document.createElement('span'); wrap.appendChild(a); wrap.appendChild(rm);
         list.appendChild(wrap);
       });
@@ -384,7 +393,7 @@ function renderOrdersTable(data){
     tdFiles.appendChild(list); tdFiles.appendChild(inp);
     tr.appendChild(tdFiles);
 
-    // Aktion
+    // Aktion (Bearbeiten)
     const tdAct = document.createElement('td');
     const btnEdit = document.createElement('button'); btnEdit.className='btn btn-ghost btn-sm'; btnEdit.textContent='Bearbeiten';
     let editing = false;
@@ -448,6 +457,7 @@ function renderSimpleMatrix(tbodyId, arr, editableColsIdx){
     const btnDel = document.createElement('button'); btnDel.className='btn btn-ghost btn-sm'; btnDel.textContent='✕';
     btnDel.style.marginLeft='6px';
     btnDel.addEventListener('click', ()=>{
+      if (!confirmDelete()) return;
       arr.splice(rIdx,1);
       renderSimpleMatrix(tbodyId, arr, editableColsIdx);
     });
@@ -480,6 +490,28 @@ if (btnAddStaff){
 }
 
 // =================== Laden & Init =======================================
+function checkUpcomingDeadlines(cust) {
+  if (!cust) return;
+  const upcoming = (cust.deadlines || []).filter(d=>{
+    const m = d.match(/(\d{1,2})\.(\d{1,2})/);
+    if (!m) return false;
+    const year = new Date().getFullYear();
+    const dt = new Date(year, parseInt(m[2])-1, parseInt(m[1]));
+    const diff = (dt - new Date()) / 86400000;
+    return diff >= 0 && diff <= 3;
+  }).map(d=>`Deadline: ${d}`);
+
+  const upcomingCal = (cust.calendar || []).filter(ev=>{
+    const diff = (new Date(ev.date) - new Date()) / 86400000;
+    return diff >= 0 && diff <= 3;
+  }).map(ev=>`Termin: ${ev.date} – ${ev.title}`);
+
+  const all = [...upcoming, ...upcomingCal];
+  if (all.length > 0) {
+    alert("⚠️ Achtung! In den nächsten Tagen stehen an:\n\n" + all.join("\n"));
+  }
+}
+
 function loadCustomer(key){
   currentKey = key;
   currentCustomer = customers[key];
@@ -500,6 +532,9 @@ function loadCustomer(key){
   renderSimpleMatrix('staffTbody', currentCustomer.mitarbeiter || [], [1,2,3]);
 
   makeTablesSortable();
+
+  // Warnmeldung bei anstehenden Deadlines
+  checkUpcomingDeadlines(currentCustomer);
 }
 
 (function init(){
