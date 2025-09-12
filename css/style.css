@@ -33,6 +33,18 @@ html, body { overflow-x: hidden; }
 main, .content, .layout { overflow-x: hidden; max-width: 100%; }
 img, canvas, table { max-width: 100%; }
 
+
+
+#contactsList a {
+  color: #ffffff;    /* yellowish, pick what you like */
+  font-weight: 600;
+  text-decoration: none; /* remove underline if you want */
+}
+#contactsList a:hover {
+  text-decoration: underline;
+}
+
+
 /* ==== Header / Tabs =================================================== */
 .topbar{
   display:grid;
