@@ -1,3 +1,33 @@
+// =================== Persistenz (localStorage) ===========================
+const STORAGE_KEY = 'relatex_data_v1';
+
+function debounce(fn, ms=250){
+  let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), ms); };
+}
+const persist = debounce(() => {
+  try {
+    const payload = { customers, currentKey };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch (e) {
+    console.warn('Persist failed:', e);
+  }
+});
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data?.customers && typeof data.customers === 'object') {
+      Object.keys(data.customers).forEach(k => { customers[k] = data.customers[k]; });
+    }
+    if (data?.currentKey && customers[data.currentKey]) {
+      currentKey = data.currentKey;
+    }
+  } catch (e) {
+    console.warn('Load state failed:', e);
+  }
+}
+
 // =================== Helper =============================================
 function confirmDelete(msg = "Diesen Eintrag wirklich löschen?") {
   return confirm(msg);
@@ -54,6 +84,7 @@ const customers = {
 let currentKey = null;
 let currentCustomer = null;
 let ordersChart = null;
+let statusChart = null;   // NEU: Piechart "Aufträge nach Status"
 
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -86,6 +117,7 @@ function renderCustomerList() {
       e.stopPropagation();
       if (!confirmDelete(`Kunde "${customers[key].name || key}" wirklich löschen?`)) return;
       delete customers[key];
+      persist();
       const restKeys = Object.keys(customers);
       if (restKeys.length > 0) {
         loadCustomer(restKeys[0]);
@@ -93,6 +125,7 @@ function renderCustomerList() {
         currentKey = null;
         currentCustomer = null;
         ul.innerHTML = '<li><em>Keine Kunden mehr</em></li>';
+        persist();
       }
     });
     li.appendChild(rm);
@@ -115,6 +148,7 @@ document.getElementById('btnAddCustomer').addEventListener('click', ()=>{
     auftraege: [], inventar: [], mitarbeiter: [],
     chart:[0,0]
   };
+  persist();
   renderCustomerList();
   loadCustomer(key);
 });
@@ -133,9 +167,11 @@ function renderSimpleList(ulId, arr){
     rm.addEventListener('click', ()=>{
       if (!confirmDelete()) return;
       arr.splice(i,1);
+      persist();
       renderSimpleList(ulId, arr);
       updateKPIs(currentCustomer);
       renderChart(currentCustomer);
+      renderStatusPie(currentCustomer); // NEU – falls Statuslisten Einfluss haben sollen
     });
     li.appendChild(rm);
     ul.appendChild(li);
@@ -156,6 +192,7 @@ function renderContactsList(contacts){
     rm.addEventListener('click', ()=>{
       if (!confirmDelete("Diesen Kontakt wirklich löschen?")) return;
       contacts.splice(i,1);
+      persist();
       renderContactsList(contacts);
       updateKPIs(currentCustomer);
     });
@@ -167,15 +204,15 @@ function renderContactsList(contacts){
 // Edit-Buttons
 document.getElementById('btnEditAktuelles').addEventListener('click', ()=>{
   const txt = prompt("Neuen Eintrag für 'Aktuelles' hinzufügen:");
-  if (txt){ currentCustomer.aktuelles.push(txt); renderSimpleList('aktuellesList', currentCustomer.aktuelles); }
+  if (txt){ currentCustomer.aktuelles.push(txt); persist(); renderSimpleList('aktuellesList', currentCustomer.aktuelles); }
 });
 document.getElementById('btnEditDeadlines').addEventListener('click', ()=>{
   const txt = prompt("Neuen 'Deadline'-Eintrag (z.B. 20.09 – Angebot) hinzufügen:");
-  if (txt){ currentCustomer.deadlines.push(txt); renderSimpleList('deadlinesList', currentCustomer.deadlines); updateKPIs(currentCustomer); }
+  if (txt){ currentCustomer.deadlines.push(txt); persist(); renderSimpleList('deadlinesList', currentCustomer.deadlines); updateKPIs(currentCustomer); }
 });
 document.getElementById('btnEditPlanung').addEventListener('click', ()=>{
   const txt = prompt("Neuen Eintrag für 'In Planung' hinzufügen:");
-  if (txt){ currentCustomer.planung.push(txt); renderSimpleList('planungList', currentCustomer.planung); }
+  if (txt){ currentCustomer.planung.push(txt); persist(); renderSimpleList('planungList', currentCustomer.planung); }
 });
 document.getElementById('btnEditKontakte').addEventListener('click', ()=>{
   const name = prompt("Kontaktname?");
@@ -184,6 +221,7 @@ document.getElementById('btnEditKontakte').addEventListener('click', ()=>{
   const mail  = prompt("E-Mail?") || "";
   const tel   = prompt("Telefon?") || "";
   currentCustomer.contacts.push({ name, rolle, mail, tel });
+  persist();
   renderContactsList(currentCustomer.contacts);
   updateKPIs(currentCustomer);
 });
@@ -195,6 +233,7 @@ document.getElementById('calendarForm').addEventListener('submit', (e)=>{
   const title = document.getElementById('calTitle').value.trim();
   if (!date || !title) return;
   currentCustomer.calendar.push({ date, title });
+  persist();
   renderCalendarList();
   e.target.reset();
 });
@@ -213,6 +252,7 @@ function renderCalendarList(){
       if (!confirmDelete("Diesen Kalendereintrag wirklich löschen?")) return;
       const idx = currentCustomer.calendar.findIndex(e=> e.date===ev.date && e.title===ev.title);
       if (idx>-1) currentCustomer.calendar.splice(idx,1);
+      persist();
       renderCalendarList();
       updateKPIs(currentCustomer);
     });
@@ -246,29 +286,25 @@ function renderChart(cust){
         tooltip:{ enabled:false },
         legend:{
           position:'bottom',
-          labels:{
-            color:'#f7f9ff' // or use generateLabels to match slice colors
-          }
+          labels:{ color:'#f7f9ff' }
         },
         datalabels:{
-          color:(ctx)=> ctx.dataIndex === 0 ? '#6aa6ff' : '#4ade80',
-  formatter:(value,ctx)=>{
-    const label = ctx.chart.data.labels[ctx.dataIndex];
-    const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0) || 1;
-    const pct = Math.round((value*100)/sum);
-    return `${label}\n${pct}%`;
-  },
-  anchor:'center',
-  align:'center',
-  textAlign:'center',
-  color:'#f8faff',                // hellere Schrift
-  font:{ weight:'bold', size:12 }, // größer, fetter
-  textStrokeColor:'#000',
-  textStrokeWidth:1.5,              // sorgt für Kontrast
-  shadowBlur:4,                   // weicher Shadow
-  shadowColor:'rgba(0,0,0,.8)'    // dunkler Schatten für besseren Kontrast
-}
-
+          formatter:(value,ctx)=>{
+            const label = ctx.chart.data.labels[ctx.dataIndex];
+            const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0) || 1;
+            const pct = Math.round((value*100)/sum);
+            return `${label}\n${pct}%`;
+          },
+          anchor:'center',
+          align:'center',
+          textAlign:'center',
+          color:'#f8faff',
+          font:{ weight:'bold', size:12 },
+          textStrokeColor:'#000',
+          textStrokeWidth:1.5,
+          shadowBlur:4,
+          shadowColor:'rgba(0,0,0,.8)'
+        }
       }
     },
     plugins:[ChartDataLabels]
@@ -300,6 +336,72 @@ function updateKPIs(cust){
   if (elCont) elCont.textContent = (cust.contacts || []).length;
 
   cust.chart = [offen, beendet];
+}
+
+// --------- NEU: Statuszählung + Piechart --------------------------------
+function getStatusCounts(cust){
+  const all = (cust.auftraege || []).map(r => (r[3] || '').toLowerCase());
+  const statuses = ['Offen','In Planung','In Arbeit','Wartet auf Kunde','Abgelehnt','Beendet'];
+  const counts = statuses.map(s => all.filter(x => x === s.toLowerCase()).length);
+  return { labels: statuses, counts };
+}
+
+function renderStatusPie(cust){
+  const el = document.getElementById('statusChart');
+  if (!el) return;
+
+  // an Containergröße anpassen
+  const parent = el.parentElement;
+  el.width = parent.clientWidth;
+  el.height = parent.clientHeight;
+
+  const { labels, counts } = getStatusCounts(cust);
+
+  if (statusChart) statusChart.destroy();
+  const ctx = el.getContext('2d');
+  statusChart = new Chart(ctx, {
+    type: 'doughnut', // oder 'pie'
+    data: {
+      labels,
+      datasets: [{
+        data: counts,
+        backgroundColor: [
+          '#fcfdffff', // Offen
+          '#93c5fd', // In Planung
+          '#60a5fa', // In Arbeit
+          '#f59e0b', // Wartet auf Kunde
+          '#ef4444', // Abgelehnt
+          '#22c55e'  // Beendet
+        ],
+        borderColor: 'rgba(0,0,0,0.15)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '45%', // Doughnut-Optik; für echtes Pie entfernen
+      plugins: {
+        legend: { position: 'bottom', labels:{ color:'#f3f6ff' } },
+        tooltip: { enabled: true },
+        datalabels: {
+          formatter:(value,ctx)=>{
+            if (!value) return '';
+            const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0) || 1;
+            const pct = Math.round((value*100)/sum);
+            return `${value} · ${pct}%`;
+          },
+          color:'#f8faff',
+          font:{ weight:'bold', size:12 },
+          textStrokeColor:'#000',
+          textStrokeWidth:2,
+          shadowBlur:4,
+          shadowColor:'rgba(0,0,0,.8)'
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
 }
 
 // =================== Tabellen: Sortierung ================================
@@ -343,7 +445,8 @@ function renderOrdersTable(data){
   const tbody = document.getElementById('ordersTbody');
   if (!tbody) return;
   tbody.innerHTML = '';
-  data.forEach((row)=>{
+
+  data.forEach((row, rowIdx)=>{
     if (!Array.isArray(row)) row = [];
     if (!row[4]) row[4] = []; // attachments
     const tr = document.createElement('tr');
@@ -354,10 +457,10 @@ function renderOrdersTable(data){
     const tdTitle = document.createElement('td'); tdTitle.textContent = row[1] ?? ''; tr.appendChild(tdTitle);
     // Wert
     const tdWert = document.createElement('td'); tdWert.textContent = row[2] ?? ''; tr.appendChild(tdWert);
-    // Status
+
+    // Status (Dropdown)
     const tdStatus = document.createElement('td');
     const sel = document.createElement('select');
-    // -> hier kannst du beliebig weitere Stati ergänzen
     ['Offen','In Planung','In Arbeit','Beendet','Wartet auf Kunde','Abgelehnt'].forEach(s=>{
       const opt = document.createElement('option'); opt.value=s; opt.textContent=s;
       if ((row[3]||'').toLowerCase() === s.toLowerCase()) opt.selected = true;
@@ -365,8 +468,10 @@ function renderOrdersTable(data){
     });
     sel.addEventListener('change', ()=>{
       row[3] = sel.value;
+      persist();
       updateKPIs(currentCustomer);
       renderChart(currentCustomer);
+      renderStatusPie(currentCustomer); // NEU: Status-Pie aktualisieren
     });
     tdStatus.appendChild(sel); tr.appendChild(tdStatus);
 
@@ -382,6 +487,7 @@ function renderOrdersTable(data){
         rm.addEventListener('click', ()=>{
           if (!confirmDelete("Diesen Anhang wirklich löschen?")) return;
           row[4].splice(idx,1);
+          persist();
           renderFiles();
         });
         const wrap = document.createElement('span'); wrap.appendChild(a); wrap.appendChild(rm);
@@ -389,21 +495,23 @@ function renderOrdersTable(data){
       });
     };
     renderFiles();
-
     const inp = document.createElement('input'); inp.type='file';
     inp.addEventListener('change', async (e)=>{
       const file = e.target.files?.[0]; if (!file) return;
       const url = await fileToDataURL(file);
       row[4].push({ name:file.name, url });
+      persist();
       renderFiles(); inp.value='';
     });
-
     tdFiles.appendChild(list); tdFiles.appendChild(inp);
     tr.appendChild(tdFiles);
 
-    // Aktion (Bearbeiten)
+    // Aktionen: Bearbeiten + Löschen
     const tdAct = document.createElement('td');
-    const btnEdit = document.createElement('button'); btnEdit.className='btn btn-ghost btn-sm'; btnEdit.textContent='Bearbeiten';
+
+    const btnEdit = document.createElement('button');
+    btnEdit.className='btn btn-ghost btn-sm';
+    btnEdit.textContent='Bearbeiten';
     let editing = false;
     btnEdit.addEventListener('click', ()=>{
       editing = !editing;
@@ -413,9 +521,30 @@ function renderOrdersTable(data){
       if (!editing){
         row[1] = tdTitle.textContent.trim();
         row[2] = tdWert.textContent.trim();
+        persist();
       }
     });
+
+    const btnDel = document.createElement('button');
+    btnDel.className='btn btn-ghost btn-sm';
+    btnDel.textContent='✕';
+    btnDel.style.marginLeft = '6px';
+    btnDel.title = 'Auftrag löschen';
+    btnDel.addEventListener('click', ()=>{
+      const id = row[0] || 'Ohne ID';
+      if (!confirmDelete(`Auftrag "${id}" wirklich löschen?`)) return;
+      // Eintrag löschen
+      currentCustomer.auftraege.splice(rowIdx, 1);
+      persist();
+      // UI aktualisieren
+      renderOrdersTable(currentCustomer.auftraege);
+      updateKPIs(currentCustomer);
+      renderChart(currentCustomer);
+      renderStatusPie(currentCustomer); // NEU
+    });
+
     tdAct.appendChild(btnEdit);
+    tdAct.appendChild(btnDel);
     tr.appendChild(tdAct);
 
     tbody.appendChild(tr);
@@ -431,9 +560,11 @@ if (btnAddOrder){
     const wert = prompt("Wert (€)?") || "";
     const status = "Offen";
     currentCustomer.auftraege.push([id, titel, wert, status, []]);
+    persist();
     renderOrdersTable(currentCustomer.auftraege);
     updateKPIs(currentCustomer);
     renderChart(currentCustomer);
+    renderStatusPie(currentCustomer); // NEU
   });
 }
 
@@ -459,6 +590,7 @@ function renderSimpleMatrix(tbodyId, arr, editableColsIdx){
         td.contentEditable = editing ? 'true' : 'false';
         if (!editing){
           row[idx] = td.textContent.trim();
+          persist();
         }
       });
     });
@@ -467,6 +599,7 @@ function renderSimpleMatrix(tbodyId, arr, editableColsIdx){
     btnDel.addEventListener('click', ()=>{
       if (!confirmDelete()) return;
       arr.splice(rIdx,1);
+      persist();
       renderSimpleMatrix(tbodyId, arr, editableColsIdx);
     });
     tdAct.appendChild(btnEdit); tdAct.appendChild(btnDel); tr.appendChild(tdAct);
@@ -482,6 +615,7 @@ if (btnAddInventar){
     const menge = prompt("Menge?") || "1";
     const standort = prompt("Standort?") || "";
     currentCustomer.inventar.push([id, artikel, menge, standort]);
+    persist();
     renderSimpleMatrix('inventarTbody', currentCustomer.inventar, [1,2,3]);
   });
 }
@@ -493,6 +627,7 @@ if (btnAddStaff){
     const rolle = prompt("Rolle?") || "";
     const mail = prompt("E-Mail?") || "";
     currentCustomer.mitarbeiter.push([id, name, rolle, mail]);
+    persist();
     renderSimpleMatrix('staffTbody', currentCustomer.mitarbeiter, [1,2,3]);
   });
 }
@@ -523,6 +658,7 @@ function checkUpcomingDeadlines(cust) {
 function loadCustomer(key){
   currentKey = key;
   currentCustomer = customers[key];
+  persist(); // aktiven Kunden speichern
 
   renderCustomerList();
 
@@ -534,6 +670,7 @@ function loadCustomer(key){
 
   updateKPIs(currentCustomer);
   renderChart(currentCustomer);
+  renderStatusPie(currentCustomer); // NEU
 
   renderOrdersTable(currentCustomer.auftraege || []);
   renderSimpleMatrix('inventarTbody', currentCustomer.inventar || [], [1,2,3]);
@@ -546,6 +683,7 @@ function loadCustomer(key){
 }
 
 (function init(){
-  const firstKey = Object.keys(customers)[0];
+  loadState(); // <- gespeicherte Daten zuerst laden
+  const firstKey = currentKey && customers[currentKey] ? currentKey : Object.keys(customers)[0];
   loadCustomer(firstKey);
 })();
