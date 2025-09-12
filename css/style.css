@@ -277,3 +277,12 @@ button:focus, .tab-btn:focus, input:focus, select:focus{
 
 /* NEU: kürzere Höhe für das Status-Piechart */
 .chart-wrap--short{ height: clamp(200px, 24vh, 300px); }
+
+/* Style for editable cells */
+.editing-cell {
+  outline: none;
+  background: rgba(255,255,255,0.05);
+  box-shadow: inset 0 0 0 2px var(--primary); /* visible border all around */
+  border-radius: 4px;
+  padding: 2px 4px;
+}

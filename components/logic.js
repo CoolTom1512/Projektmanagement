@@ -513,17 +513,22 @@ function renderOrdersTable(data){
     btnEdit.className='btn btn-ghost btn-sm';
     btnEdit.textContent='Bearbeiten';
     let editing = false;
-    btnEdit.addEventListener('click', ()=>{
+    btnEdit.addEventListener('click', () => {
       editing = !editing;
       btnEdit.textContent = editing ? 'Speichern' : 'Bearbeiten';
-      tdTitle.contentEditable = editing ? 'true' : 'false';
-      tdWert.contentEditable  = editing ? 'true' : 'false';
-      if (!editing){
+
+      [tdTitle, tdWert].forEach(td => {
+        td.contentEditable = editing ? 'true' : 'false';
+        td.classList.toggle('editing-cell', editing); // <-- add/remove border-box
+      });
+
+      if (!editing) {
         row[1] = tdTitle.textContent.trim();
         row[2] = tdWert.textContent.trim();
         persist();
       }
     });
+
 
     const btnDel = document.createElement('button');
     btnDel.className='btn btn-ghost btn-sm';
