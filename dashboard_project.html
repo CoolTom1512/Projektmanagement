@@ -1,151 +1,182 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="de">
-
 <head>
-  <meta charset="UTF-8">
-  <title>RelateX</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RelateX – CRM Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="components/logic.js" type="text/javascript" defer></script>
-
-  <link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
+  <!-- Chart.js + DataLabels -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 </head>
-
 <body>
-  <div class="sidebar" id="sidebar">
-    <h3>Kunden</h3>
-    <ul>
-      <li onclick="loadCustomer('A')">TechNova Solutions</li>
-      <li onclick="loadCustomer('B')">InnoCore Enterprises</li>
-      <li onclick="loadCustomer('C')">PeakPulse Technologies</li>
-      <li onclick="loadCustomer('D')">BlueHorizon Consulting</li>
-    </ul>
-  </div>
-
-  <div class="main">
-    <nav>
-      <button id="btn-dashboard" class="active">Dashboard</button>
-      <button id="btn-auftraege">Aufträge</button>
-      <button id="btn-inventar">Inventar</button>
-      <button id="btn-mitarbeiter">Mitarbeiter</button>
+  <header class="topbar">
+    <div class="brand">RelateX · CRM</div>
+    <nav class="tabs">
+      <button class="tab-btn active" data-target="view-dashboard">Dashboard</button>
+      <button class="tab-btn" data-target="view-orders">Aufträge</button>
+      <button class="tab-btn" data-target="view-inventory">Inventar</button>
+      <button class="tab-btn" data-target="view-staff">Mitarbeiter</button>
     </nav>
+  </header>
 
-    <div class="content" id="content">
-      <!-- Dashboard -->
-      <div id="dashboard" class="view">
-        <div class="top-grid">
-          <div class="card">
-            <h2>Aufträge Status</h2>
-            <canvas id="auftraegeChart" class="chart"></canvas>
-          </div>
-          <div class="card">
-            <h2>Geschäftsführung</h2>
-            <p><strong>Geschäftsführer:</strong> Hans Müller<br>
-              <strong>Telefon:</strong> +49 160 111111<br>
-              <strong>Email:</strong> hans.mueller@firma.de
-            </p>
-            <p><strong>Ansprechpartner:</strong> Julia Meier (Projektmanagerin)<br>
-              <strong>Telefon:</strong> +49 160 222222<br>
-              <strong>Email:</strong> julia.meier@firma.de
-            </p>
-          </div>
-        </div>
-        <div class="grid">
-          <div class="card">
-            <h2>Aktuelles</h2>
-            <div id="aktuelles"></div>
-          </div>
-          <div class="card">
-            <h2>Deadlines</h2>
-            <ul id="deadlines"></ul>
-          </div>
-          <div class="card">
-            <h2>In Planung</h2>
-            <ul id="planung"></ul>
-          </div>
-        </div>
+  <main class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Kunden</h2>
+        <button id="btnAddCustomer" class="btn btn-primary btn-sm">+ Neuer Kunde</button>
       </div>
+      <ul id="customerList" class="customer-list"><!-- via JS --></ul>
+    </aside>
 
-      <!-- Aufträge -->
-      <div id="auftraege" class="view" style="display:none;">
-        <div class="header-grid">
-          <div class="card">
-            <h2>Gesamtaufträge</h2>
-            <p id="auftraegeGesamt"></p>
-          </div>
-          <div class="card">
-            <h2>Aktive Aufträge</h2>
-            <p id="auftraegeAktiv"></p>
-          </div>
-          <div class="card">
-            <h2>Gesamtwert aktiv</h2>
-            <p id="auftraegeWert"></p>
-          </div>
-        </div>
-        <div class="actions">
-          <input type="text" id="searchAuftraege" placeholder="Suchen...">
-          <button onclick="addNewRow('auftraege')">Neuer Auftrag</button>
-        </div>
-        <div class="card">
-          <h2>Aufträge Übersicht</h2>
-          <table id="auftraegeTable"></table>
-        </div>
-      </div>
+    <!-- Content -->
+    <section class="content">
 
-      <!-- Inventar -->
-      <div id="inventar" class="view" style="display:none;">
-        <div class="header-grid">
+      <!-- DASHBOARD -->
+      <section id="view-dashboard" class="view active">
+        <div class="cards-grid">
+          <!-- KPIs -->
           <div class="card">
-            <h2>Gesamtartikel</h2>
-            <p id="inventarGesamt"></p>
+            <h3>KPIs</h3>
+            <div class="kpi-row">
+              <div class="kpi"><span id="kpi-open-orders">0</span><label>Offene Aufträge</label></div>
+              <div class="kpi"><span id="kpi-deadlines-week">0</span><label>Deadlines (7 Tage)</label></div>
+              <div class="kpi"><span id="kpi-contacts">0</span><label>Kontakte</label></div>
+            </div>
           </div>
-          <div class="card">
-            <h2>Niedriger Bestand</h2>
-            <p id="inventarNiedrig"></p>
-          </div>
-          <div class="card">
-            <h2>Kategorien</h2>
-            <p id="inventarKategorien"></p>
-          </div>
-        </div>
-        <div class="actions">
-          <input type="text" id="searchInventar" placeholder="Suchen...">
-          <button onclick="addNewRow('inventar')">Neuer Artikel</button>
-        </div>
-        <div class="card">
-          <h2>Inventar Übersicht</h2>
-          <table id="inventarTable"></table>
-        </div>
-      </div>
 
-      <!-- Mitarbeiter -->
-      <div id="mitarbeiter" class="view" style="display:none;">
-        <div class="header-grid">
+          <!-- Diagramm (größer, ohne Überlauf) -->
           <div class="card">
-            <h2>Gesamtmitarbeiter</h2>
-            <p id="mitarbeiterGesamt"></p>
+            <div class="card-title-row">
+              <h3>Aufträge: Offen vs. Beendet</h3>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="ordersChart"></canvas>
+            </div>
           </div>
+
+          <!-- Aktuelles -->
           <div class="card">
-            <h2>Aktive Mitarbeiter</h2>
-            <p id="mitarbeiterAktiv"></p>
+            <div class="card-title-row">
+              <h3>Aktuelles</h3>
+              <button class="btn btn-ghost btn-sm" id="btnEditAktuelles">Bearbeiten</button>
+            </div>
+            <ul id="aktuellesList" class="list"></ul>
           </div>
+
+          <!-- Deadlines -->
           <div class="card">
-            <h2>Abteilungen</h2>
-            <p id="mitarbeiterAbteilungen"></p>
+            <div class="card-title-row">
+              <h3>Deadlines</h3>
+              <button class="btn btn-ghost btn-sm" id="btnEditDeadlines">Bearbeiten</button>
+            </div>
+            <ul id="deadlinesList" class="list"></ul>
+          </div>
+
+          <!-- Planung -->
+          <div class="card">
+            <div class="card-title-row">
+              <h3>In Planung</h3>
+              <button class="btn btn-ghost btn-sm" id="btnEditPlanung">Bearbeiten</button>
+            </div>
+            <ul id="planungList" class="list"></ul>
+          </div>
+
+          <!-- Kontakte -->
+          <div class="card">
+            <div class="card-title-row">
+              <h3>Geschäftsführung · Kontakte</h3>
+              <button class="btn btn-ghost btn-sm" id="btnEditKontakte">Bearbeiten</button>
+            </div>
+            <ul id="contactsList" class="list"></ul>
+          </div>
+
+          <!-- Kalender -->
+          <div class="card">
+            <div class="card-title-row"><h3>Kalender</h3></div>
+            <form id="calendarForm" class="calendar-form">
+              <input type="date" id="calDate" required />
+              <input type="text" id="calTitle" placeholder="Eintrag" required />
+              <button type="submit" class="btn btn-primary btn-sm">+ Eintragen</button>
+            </form>
+            <ul id="calendarList" class="list"></ul>
           </div>
         </div>
-        <div class="actions">
-          <input type="text" id="searchMitarbeiter" placeholder="Suchen...">
-          <button onclick="addNewRow('mitarbeiter')">Neuer Mitarbeiter</button>
+      </section>
+
+      <!-- AUFTRÄGE -->
+      <section id="view-orders" class="view">
+        <div class="table-actions">
+          <button id="btnAddOrder" class="btn btn-primary btn-sm">+ Auftrag</button>
         </div>
-        <div class="card">
-          <h2>Mitarbeiter Übersicht</h2>
-          <table id="mitarbeiterTable"></table>
+        <div class="table-wrap">
+          <table id="ordersTable" class="table sortable">
+            <thead>
+              <tr>
+                <th data-col="id">ID</th>
+                <th data-col="titel">Titel</th>
+                <th data-col="wert">Wert (€)</th>
+                <th data-col="status">Status</th>
+                <th data-col="anhaenge">Anhänge</th>
+                <th>Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTbody"></tbody>
+          </table>
         </div>
-      </div>
-    </div>
-  </div>
+      </section>
+
+      <!-- INVENTAR -->
+      <section id="view-inventory" class="view">
+        <div class="table-actions">
+          <button id="btnAddInventar" class="btn btn-primary btn-sm">+ Inventar</button>
+        </div>
+        <div class="table-wrap">
+          <table id="inventarTable" class="table sortable">
+            <thead>
+              <tr>
+                <th data-col="id">ID</th>
+                <th data-col="artikel">Artikel</th>
+                <th data-col="menge">Menge</th>
+                <th data-col="standort">Standort</th>
+                <th>Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="inventarTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MITARBEITER -->
+      <section id="view-staff" class="view">
+        <div class="table-actions">
+          <button id="btnAddStaff" class="btn btn-primary btn-sm">+ Mitarbeiter</button>
+        </div>
+        <div class="table-wrap">
+          <table id="staffTable" class="table sortable">
+            <thead>
+              <tr>
+                <th data-col="id">ID</th>
+                <th data-col="name">Name</th>
+                <th data-col="rolle">Rolle</th>
+                <th data-col="mail">E-Mail</th>
+                <th>Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="staffTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>© RelateX</span>
+  </footer>
+
+  <script src="components/logic.js"></script>
 </body>
-
 </html>

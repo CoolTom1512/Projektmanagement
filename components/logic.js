@@ -1,225 +1,508 @@
-const buttons = document.querySelectorAll("nav button");
-const views = document.querySelectorAll(".view");
-
-buttons.forEach(btn => {
-    btn.addEventListener("click", () => {
-        buttons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        views.forEach(v => v.style.display = "none");
-        document.getElementById(btn.id.replace("btn-", "")).style.display = "block";
-    });
-});
-
+// =================== Demo-Daten =========================================
 const customers = {
-    A: {
-    aktuelles: "Neue IT-Infrastruktur in Planung",
-    deadlines: ["Projekt A1 – 01.09.2025", "Projekt A2 – 15.09.2025"],
-    planung: ["Projekt A3 – Angebotsphase"],
+  A: {
+    name: "Alpha GmbH",
+    aktuelles: ["Q4-Angebot in Vorbereitung", "Neues Ticket-System angefragt"],
+    deadlines: ["20.09 – Angebot Finalisierung", "28.09 – Review mit Sales"],
+    planung: ["Pilot-Workshop Oktober", "Datenmigration Test"],
+    contacts: [
+      { name: "Max Mustermann", rolle: "Geschäftsführer", mail: "max@alpha.de", tel: "+49 611 123456" }
+    ],
+    calendar: [
+      { date: "2025-09-15", title: "Sprint Review" }
+    ],
     auftraege: [
-        ["A-2025-001", "Website Redesign", "In Bearbeitung", "Webentwicklung", "€12.500", "01.08.2025", "01.12.2025", "Herr Schmidt"],
-        ["A-2025-002", "SEO Optimierung", "Warten auf Kunde", "Marketing", "€3.500", "15.08.2025", "30.09.2025", "Frau Keller"],
-        ["A-2025-003", "App-Entwicklung", "In Planung", "Softwareentwicklung", "€18.000", "10.08.2025", "20.12.2025", "Herr Müller"],
-        ["A-2025-004", "Content-Strategie", "Genehmigung ausstehend", "Content", "€4.200", "20.08.2025", "15.11.2025", "Frau Braun"],
-        ["A-2025-005", "Server-Upgrade", "In Bearbeitung", "IT-Services", "€9.000", "05.09.2025", "10.11.2025", "Herr Fischer"]
+      ["A-101","CRM Einführung", "25.000 €", "Offen", []],
+      ["A-102","Datenmigration", "8.500 €", "In Arbeit", []],
+      ["A-103","Schulung Team", "2.000 €", "Beendet", []],
     ],
     inventar: [
-        ["ART-001", "Laptop Dell XPS 13", "Hardware", "15 Stück", "Verfügbar", "€1.200", "€1.500", "Dell GmbH"],
-        ["ART-002", "Monitor 24 Zoll", "Hardware", "3 Stück", "Niedrig", "€200", "€350", "Samsung"],
-        ["ART-003", "Drucker Canon Pixma", "Hardware", "5 Stück", "Verfügbar", "€150", "€250", "Canon Europe"],
-        ["ART-004", "Externes Festplatte 1TB", "Hardware", "10 Stück", "Verfügbar", "€90", "€130", "Seagate"],
-        ["ART-005", "Netzwerkkabel 10m", "Hardware", "20 Stück", "Verfügbar", "€10", "€15", "CableTech"],
-        ["ART-006", "UPS-System 1000VA", "Hardware", "2 Stück", "Niedrig", "€300", "€400", "APC by Schneider"]
+      ["I-1","Server Rack","2","Wiesbaden"],
+      ["I-2","Laptops","25","Mainz"]
     ],
     mitarbeiter: [
-        ["Max Mustermann", "Projektleiter", "IT", "Aktiv", "max@firma.de", "+49 160 123456", "01.01.2020", "Frau Müller"],
-        ["Lisa Schuster", "Entwicklerin", "Software", "Aktiv", "lisa@firma.de", "+49 160 234567", "15.05.2021", "Herr Schmidt"],
-        ["Peter Weber", "Marketingmanager", "Marketing", "Aktiv", "peter@firma.de", "+49 160 345678", "10.03.2019", "Frau Keller"],
-        ["Julia Hoffmann", "HR-Assistentin", "Personal", "Aktiv", "julia@firma.de", "+49 160 456789", "20.07.2022", "Herr Müller"],
-        ["Thomas Becker", "Netzwerktechniker", "IT", "Aktiv", "thomas@firma.de", "+49 160 567890", "05.11.2020", "Frau Braun"]
+      ["M-1","Lena König","Projektleitung","l.koenig@alpha.de"],
+      ["M-2","Tariq Aziz","Entwicklung","t.aziz@alpha.de"]
     ],
-    chart: [5, 12]
-    },
-
-    B: {
-        aktuelles: "Umstellung auf Cloud-Systeme",
-        deadlines: ["Projekt B1 – 05.09.2025", "Projekt B2 – 20.09.2025"],
-        planung: ["Projekt B3 – Vertragsverhandlung"],
-        auftraege: [
-            ["B-2025-001", "App Entwicklung", "In Bearbeitung", "Softwareentwicklung", "€9.800", "10.08.2025", "15.11.2025", "Herr Wagner"],
-            ["B-2025-002", "Social Media Kampagne", "Genehmigung ausstehend", "Marketing", "€2.300", "20.08.2025", "10.10.2025", "Frau Schneider"],
-            ["B-2025-003", "Website Maintenance", "In Planung", "Webentwicklung", "€6.500", "12.08.2025", "30.11.2025", "Herr Krause"],
-            ["B-2025-004", "Datenanalyse", "Warten auf Daten", "IT-Services", "€7.200", "25.08.2025", "20.12.2025", "Frau Meier"],
-        ],
-        inventar: [
-            ["ART-007", "Laptop Lenovo ThinkPad", "Hardware", "10 Stück", "Verfügbar", "€1.000", "€1.300", "Lenovo GmbH"],
-            ["ART-008", "Drucker HP LaserJet", "Hardware", "2 Stück", "Niedrig", "€150", "€250", "HP Deutschland"],
-            ["ART-009", "Server Dell PowerEdge", "Hardware", "4 Stück", "Verfügbar", "€2.000", "€2.500", "Dell GmbH"],
-            ["ART-010", "Kopiergerät Ricoh", "Hardware", "3 Stück", "Niedrig", "€400", "€550", "Ricoh Germany"],
-            ["ART-011", "USB-Stick 64GB", "Hardware", "25 Stück", "Verfügbar", "€15", "€25", "SanDisk"],
-            ["ART-012", "Router Cisco", "Hardware", "5 Stück", "Verfügbar", "€120", "€180", "Cisco Systems"]
-        ],
-        mitarbeiter: [
-            ["Anna Schmidt", "Entwicklerin", "Software", "Aktiv", "anna@unternehmen.de", "+49 160 654321", "15.03.2021", "Herr Becker"],
-            ["Markus Klein", "Systemadministrator", "IT", "Aktiv", "markus@unternehmen.de", "+49 160 765432", "01.09.2020", "Frau Schneider"],
-            ["Klara Fischer", "Grafikdesignerin", "Marketing", "Aktiv", "klara@unternehmen.de", "+49 160 876543", "22.04.2022", "Herr Wagner"],
-            ["Stefan Huber", "Supportmitarbeiter", "IT", "Aktiv", "stefan@unternehmen.de", "+49 160 987654", "10.12.2018", "Herr Krause"],
-            ["Elena Richter", "Projektkoordinatorin", "Management", "Aktiv", "elena@unternehmen.de", "+49 160 123789", "15.06.2021", "Frau Meier"]
-        ],
-        chart: [4, 5]
-    },
-
-    C: {
-        aktuelles: "Neuer Serverraum einrichten",
-        deadlines: ["Projekt C1 – 10.09.2025", "Projekt C2 – 25.09.2025"],
-        planung: ["Projekt C3 – Budgetplanung"],
-        auftraege: [
-            ["C-2025-001", "Datenbank Migration", "In Bearbeitung", "IT-Services", "€15.000", "05.08.2025", "01.12.2025", "Herr Fischer"],
-            ["C-2025-002", "Content Erstellung", "Warten auf Freigabe", "Content", "€1.800", "18.08.2025", "05.10.2025", "Frau Weber"],
-            ["C-2025-003", "Netzwerkausbau", "In Planung", "IT-Services", "€10.500", "08.08.2025", "25.11.2025", "Herr Petersen"],
-        ],
-        inventar: [
-            ["ART-013", "Server Rack", "Hardware", "5 Stück", "Verfügbar", "€2.500", "€3.000", "Cisco Systems"],
-            ["ART-014", "Netzwerk Switch", "Hardware", "1 Stück", "Niedrig", "€300", "€450", "Netgear"],
-            ["ART-015", "Laptop Acer Aspire", "Hardware", "7 Stück", "Verfügbar", "€800", "€1.100", "Acer Germany"],
-            ["ART-016", "Scanner Epson", "Hardware", "4 Stück", "Niedrig", "€200", "€300", "Epson Europe"],
-            ["ART-017", "Headset Jabra", "Hardware", "15 Stück", "Verfügbar", "€50", "€80", "Jabra"],
-            ["ART-018", "KVM-Switch", "Hardware", "3 Stück", "Verfügbar", "€150", "€200", "Aten"]
-        ],
-        mitarbeiter: [
-            ["Thomas Krause", "Netzwerkadministrator", "IT", "Aktiv", "thomas@firmac.de", "+49 160 789012", "20.06.2019", "Frau Hoffmann"],
-            ["Sabine Vogel", "Datenanalystin", "IT", "Aktiv", "sabine@firmac.de", "+49 160 890123", "12.08.2021", "Herr Fischer"],
-            ["Robert Klein", "Content Manager", "Content", "Aktiv", "robert@firmac.de", "+49 160 901234", "05.10.2020", "Frau Weber"],
-            ["Maria Schuster", "Trainingsleiterin", "Schulung", "Aktiv", "maria@firmac.de", "+49 160 012345", "25.03.2022", "Herr Petersen"],
-            ["Daniel Weber", "Sicherheitsberater", "IT-Sicherheit", "Aktiv", "daniel@firmac.de", "+49 160 123450", "30.09.2019", "Frau Lehmann"]
-        ],
-        chart: [3, 8]
-    },
-
-    D: {
-        aktuelles: "Digitalisierungsstrategie entwickeln",
-        deadlines: ["Projekt D1 – 15.09.2025", "Projekt D2 – 30.09.2025"],
-        planung: ["Projekt D3 – Pilotphase"],
-        auftraege: [
-            ["D-2025-001", "CRM Implementierung", "In Bearbeitung", "Business Software", "€20.000", "01.08.2025", "15.12.2025", "Herr Lehmann"],
-            ["D-2025-002", "Trainingsdokumentation", "Warten auf Feedback", "Schulung", "€1.200", "25.08.2025", "20.10.2025", "Frau Richter"],
-        ],
-        inventar: [
-            ["ART-019", "Laptop HP EliteBook", "Hardware", "8 Stück", "Verfügbar", "€1.300", "€1.700", "HP Deutschland"],
-            ["ART-020", "Externes Festplatte", "Hardware", "4 Stück", "Niedrig", "€80", "€120", "Western Digital"],
-            ["ART-021", "Projektor BenQ", "Hardware", "6 Stück", "Verfügbar", "€600", "€800", "BenQ Europe"],
-            ["ART-022", "Webcam Logitech", "Hardware", "12 Stück", "Verfügbar", "€70", "€100", "Logitech"],
-            ["ART-023", "Docking Station", "Hardware", "9 Stück", "Verfügbar", "€150", "€200", "Kensington"],
-            ["ART-024", "Firewall Palo Alto", "Hardware", "2 Stück", "Niedrig", "€1.000", "€1.300", "Palo Alto Networks"]
-        ],
-        mitarbeiter: [
-            ["Sophie Meier", "HR Managerin", "Personal", "Aktiv", "sophie@gesellschaft.de", "+49 160 345678", "10.09.2022", "Herr Schuster"],
-            ["Paul Schuster", "Softwareentwickler", "Software", "Aktiv", "paul@gesellschaft.de", "+49 160 456789", "18.02.2021", "Herr Lehmann"],
-            ["Karin Hofmann", "Marketingassistentin", "Marketing", "Aktiv", "karin@gesellschaft.de", "+49 160 567890", "05.07.2020", "Frau Richter"],
-            ["Lukas König", "IT-Administrator", "IT", "Aktiv", "lukas@gesellschaft.de", "+49 160 678901", "22.11.2019", "Herr Schulz"],
-            ["Nina Schulz", "Projektassistentin", "Management", "Aktiv", "nina@gesellschaft.de", "+49 160 789012", "14.04.2023", "Frau Hofmann"]
-        ],
-        chart: [2, 5]
-    }
+    chart: [0,0]
+  },
+  B: {
+    name: "Beta AG",
+    aktuelles: ["Servicevertrag verlängern"],
+    deadlines: ["18.09 – Service-Review"],
+    planung: [],
+    contacts: [{ name: "Julia Neumann", rolle: "COO", mail: "j.neumann@beta.com", tel: "+49 30 998877" }],
+    calendar: [],
+    auftraege: [
+      ["B-201","Ticket-Portal", "12.000 €", "Beendet", []],
+      ["B-202","Dashboard KPIs", "6.750 €", "Offen", []],
+    ],
+    inventar: [["I-4","Switches","8","Berlin"]],
+    mitarbeiter: [["M-5","O. Schuster","Service","os@beta.com"]],
+    chart: [0,0]
+  },
+  C: { name:"Cappa Solutions", aktuelles:[], deadlines:[], planung:["Workshop Planung"], contacts:[], calendar:[], auftraege:[], inventar:[], mitarbeiter:[], chart:[0,0] },
+  D: { name:"Delta KG", aktuelles:["Roadmap-Abstimmung"], deadlines:["25.09 – Angebotspräsentation"], planung:[], contacts:[{name:"H. Berger",rolle:"GF",mail:"hb@delta.de",tel:"+49 89 111222"}], calendar:[], auftraege:[["D-301","Integration ERP","18.000 €","In Arbeit",[]]], inventar:[], mitarbeiter:[], chart:[0,0] }
 };
 
-let currentChart;
-function loadCustomer(key) {
-    const c = customers[key];
+// =================== State & Navigation =================================
+let currentKey = null;
+let currentCustomer = null;
+let ordersChart = null;
 
-    document.getElementById("aktuelles").textContent = c.aktuelles;
-    document.getElementById("deadlines").innerHTML = c.deadlines.map(d => `<li>${d}</li>`).join("");
-    document.getElementById("planung").innerHTML = c.planung.map(p => `<li>${p}</li>`).join("");
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+  });
+});
 
-    renderTable('auftraege', c.auftraege);
-    renderTable('inventar', c.inventar);
-    renderTable('mitarbeiter', c.mitarbeiter);
+function renderCustomerList() {
+  const ul = document.getElementById('customerList');
+  ul.innerHTML = '';
+  Object.keys(customers).forEach(key=>{
+    const li = document.createElement('li');
 
-    if (currentChart) currentChart.destroy();
+    // Name
+    const span = document.createElement('span');
+    span.textContent = `${key} · ${customers[key].name || 'Kunde'}`;
+    span.style.cursor = "pointer";
+    span.addEventListener('click', ()=> loadCustomer(key));
+    li.appendChild(span);
 
-    const ctx = document.getElementById('auftraegeChart');
+    // Löschen-Button
+    const rm = document.createElement('button');
+    rm.className = 'btn btn-ghost btn-sm';
+    rm.textContent = '✕';
+    rm.style.marginLeft = '6px';
+    rm.addEventListener('click', (e)=>{
+      e.stopPropagation(); // nicht loadCustomer triggern
+      if (confirm(`Kunde "${customers[key].name}" wirklich löschen?`)) {
+        delete customers[key];
+        // neuen aktuellen Kunden laden, falls der aktive gelöscht wurde
+        const restKeys = Object.keys(customers);
+        if (restKeys.length > 0) {
+          loadCustomer(restKeys[0]);
+        } else {
+          currentKey = null;
+          currentCustomer = null;
+          ul.innerHTML = '<li><em>Keine Kunden mehr</em></li>';
+        }
+      }
+    });
+    li.appendChild(rm);
 
-    currentChart = new Chart(ctx, {
-        type: 'pie',
-        data: { labels: ['Offen', 'Beendet'], datasets: [{ data: c.chart, backgroundColor: ['#ff9800', '#4caf50'] }] },
-        options: { responsive: false, maintainAspectRatio: false }
+    if (key === currentKey) li.classList.add('active');
+    ul.appendChild(li);
+  });
+}
+
+
+document.getElementById('btnAddCustomer').addEventListener('click', ()=>{
+  const name = prompt("Name des neuen Kunden?");
+  if (!name) return;
+  const base = name.replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,2) || 'NE';
+  let idx=1, key=base;
+  while(customers[key]) { idx++; key = base + idx; }
+  customers[key] = {
+    name,
+    aktuelles: [], deadlines: [], planung: [],
+    contacts: [], calendar: [],
+    auftraege: [], inventar: [], mitarbeiter: [],
+    chart:[0,0]
+  };
+  renderCustomerList();
+  loadCustomer(key);
+});
+
+// =================== Dashboard ==========================================
+function renderSimpleList(ulId, arr){
+  const ul = document.getElementById(ulId);
+  ul.innerHTML = '';
+  (arr || []).forEach((text, i)=>{
+    const li = document.createElement('li');
+    li.textContent = text;
+    const rm = document.createElement('button');
+    rm.className = 'btn btn-ghost btn-sm';
+    rm.textContent = '✕';
+    rm.style.marginLeft = '6px';
+    rm.addEventListener('click', ()=>{
+      arr.splice(i,1);
+      renderSimpleList(ulId, arr);
+      updateKPIs(currentCustomer);
+      renderChart(currentCustomer);
+    });
+    li.appendChild(rm);
+    ul.appendChild(li);
+  });
+}
+
+function renderContactsList(contacts){
+  const ul = document.getElementById('contactsList');
+  ul.innerHTML = '';
+  (contacts || []).forEach((c, i)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${c.name}</strong> – ${c.rolle} · 
+      <a href="mailto:${c.mail}">${c.mail}</a> · <a href="tel:${c.tel}">${c.tel}</a>`;
+    const rm = document.createElement('button');
+    rm.className = 'btn btn-ghost btn-sm';
+    rm.textContent = '✕';
+    rm.style.marginLeft = '6px';
+    rm.addEventListener('click', ()=>{
+      contacts.splice(i,1);
+      renderContactsList(contacts);
+      updateKPIs(currentCustomer);
+    });
+    li.appendChild(rm);
+    ul.appendChild(li);
+  });
+}
+
+// Edit-Buttons
+document.getElementById('btnEditAktuelles').addEventListener('click', ()=>{
+  const txt = prompt("Neuen Eintrag für 'Aktuelles' hinzufügen:");
+  if (txt){ currentCustomer.aktuelles.push(txt); renderSimpleList('aktuellesList', currentCustomer.aktuelles); }
+});
+document.getElementById('btnEditDeadlines').addEventListener('click', ()=>{
+  const txt = prompt("Neuen 'Deadline'-Eintrag (z.B. 20.09 – Angebot) hinzufügen:");
+  if (txt){ currentCustomer.deadlines.push(txt); renderSimpleList('deadlinesList', currentCustomer.deadlines); updateKPIs(currentCustomer); }
+});
+document.getElementById('btnEditPlanung').addEventListener('click', ()=>{
+  const txt = prompt("Neuen Eintrag für 'In Planung' hinzufügen:");
+  if (txt){ currentCustomer.planung.push(txt); renderSimpleList('planungList', currentCustomer.planung); }
+});
+document.getElementById('btnEditKontakte').addEventListener('click', ()=>{
+  const name = prompt("Kontaktname?");
+  if (!name) return;
+  const rolle = prompt("Rolle (z.B. Geschäftsführer)?") || "";
+  const mail  = prompt("E-Mail?") || "";
+  const tel   = prompt("Telefon?") || "";
+  currentCustomer.contacts.push({ name, rolle, mail, tel });
+  renderContactsList(currentCustomer.contacts);
+  updateKPIs(currentCustomer);
+});
+
+// Kalender
+document.getElementById('calendarForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const date = document.getElementById('calDate').value;
+  const title = document.getElementById('calTitle').value.trim();
+  if (!date || !title) return;
+  currentCustomer.calendar.push({ date, title });
+  renderCalendarList();
+  e.target.reset();
+});
+function renderCalendarList(){
+  const ul = document.getElementById('calendarList');
+  ul.innerHTML = '';
+  const items = [...(currentCustomer.calendar||[])].sort((a,b)=> a.date.localeCompare(b.date));
+  items.forEach(ev=>{
+    const li = document.createElement('li');
+    li.textContent = `${ev.date}: ${ev.title}`;
+    const rm = document.createElement('button');
+    rm.className = 'btn btn-ghost btn-sm';
+    rm.textContent = '✕';
+    rm.style.marginLeft = '6px';
+    rm.addEventListener('click', ()=>{
+      const idx = currentCustomer.calendar.findIndex(e=> e.date===ev.date && e.title===ev.title);
+      if (idx>-1) currentCustomer.calendar.splice(idx,1);
+      renderCalendarList();
+      updateKPIs(currentCustomer);
+    });
+    li.appendChild(rm);
+    ul.appendChild(li);
+  });
+}
+
+// =================== Chart + KPIs =======================================
+function renderChart(cust){
+  const canvas = document.getElementById('ordersChart');
+  if (!canvas) return;
+
+  // Chart an Elternhöhe anpassen
+  const parent = canvas.parentElement;
+  canvas.width = parent.clientWidth;
+  canvas.height = parent.clientHeight;
+
+  const ctx = canvas.getContext('2d');
+  const data = cust.chart || [0,0];
+  if (ordersChart) ordersChart.destroy();
+  ordersChart = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels:['Offen','Beendet'], datasets:[{ data }] },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false, /* -> nutzt chart-wrap Höhe */
+      cutout:'55%',
+      plugins:{
+        tooltip:{ enabled:false },
+        legend:{ position:'bottom' },
+        datalabels:{
+  formatter:(value,ctx)=>{
+    const label = ctx.chart.data.labels[ctx.dataIndex];
+    const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0) || 1;
+    const pct = Math.round((value*100)/sum);
+    return `${label}\n${pct}%`;
+  },
+  anchor:'center',
+  align:'center',
+  textAlign:'center',
+  color:'#f8faff',                // hellere Schrift
+  font:{ weight:'bold', size:12 }, // größer, fetter
+  textStrokeColor:'#000',         
+  textStrokeWidth:1.5,              // sorgt für Kontrast
+  shadowBlur:4,                   // weicher Shadow
+  shadowColor:'rgba(0,0,0,.8)'    // dunkler Schatten für besseren Kontrast
+}
+
+      }
+    },
+    plugins:[ChartDataLabels]
+  });
+}
+
+function updateKPIs(cust){
+  const auf = cust.auftraege || [];
+  const offen = auf.filter(r => (r[3]||'').toLowerCase() !== 'beendet').length;
+  const beendet = auf.length - offen;
+
+  const upcomingDeadlines = (cust.deadlines || []).filter(d=>{
+    const m = d.match(/(\d{1,2})\.(\d{1,2})/);
+    if (!m) return false;
+    const year = new Date().getFullYear();
+    const dt = new Date(year, parseInt(m[2])-1, parseInt(m[1]));
+    const diff = (dt - new Date()) / 86400000;
+    return diff >= 0 && diff <= 7;
+  }).length + (cust.calendar || []).filter(ev=>{
+    const diff = (new Date(ev.date) - new Date()) / 86400000;
+    return diff >= 0 && diff <= 7;
+  }).length;
+
+  const elOpen   = document.getElementById('kpi-open-orders');
+  const elWeek   = document.getElementById('kpi-deadlines-week');
+  const elCont   = document.getElementById('kpi-contacts');
+  if (elOpen) elOpen.textContent = offen;
+  if (elWeek) elWeek.textContent = upcomingDeadlines;
+  if (elCont) elCont.textContent = (cust.contacts || []).length;
+
+  cust.chart = [offen, beendet];
+}
+
+// =================== Tabellen: Sortierung ================================
+function makeTablesSortable(){
+  document.querySelectorAll('table.sortable thead th[data-col]').forEach((th, idx)=>{
+    th.classList.add('sortable');
+    th.addEventListener('click', ()=>{
+      const table = th.closest('table');
+      const tbody = table.querySelector('tbody');
+      const headers = table.querySelectorAll('thead th');
+      headers.forEach(h=>h.classList.remove('sort-asc','sort-desc'));
+      const asc = !th.classList.contains('sort-asc');
+      th.classList.toggle('sort-asc', asc);
+      th.classList.toggle('sort-desc', !asc);
+
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a,b)=>{
+        const A = a.children[idx].innerText.trim();
+        const B = b.children[idx].innerText.trim();
+        const nA = parseFloat(A.replace(/[^\d.,-]/g,'').replace(',','.'));
+        const nB = parseFloat(B.replace(/[^\d.,-]/g,'').replace(',','.'));
+        const bothNum = !isNaN(nA) && !isNaN(nB);
+        if (bothNum) return asc ? nA - nB : nB - nA;
+        return asc ? A.localeCompare(B, 'de', {numeric:true}) : B.localeCompare(A, 'de', {numeric:true});
+      });
+      rows.forEach(r=>tbody.appendChild(r));
+    });
+  });
+}
+
+// =================== Aufträge ===========================================
+function fileToDataURL(file){
+  return new Promise(res=>{
+    const fr = new FileReader();
+    fr.onload = ()=>res(fr.result);
+    fr.readAsDataURL(file);
+  });
+}
+
+function renderOrdersTable(data){
+  const tbody = document.getElementById('ordersTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  data.forEach((row)=>{
+    if (!Array.isArray(row)) row = [];
+    if (!row[4]) row[4] = []; // attachments
+    const tr = document.createElement('tr');
+
+    // ID
+    const tdId = document.createElement('td'); tdId.textContent = row[0] ?? ''; tr.appendChild(tdId);
+    // Titel
+    const tdTitle = document.createElement('td'); tdTitle.textContent = row[1] ?? ''; tr.appendChild(tdTitle);
+    // Wert
+    const tdWert = document.createElement('td'); tdWert.textContent = row[2] ?? ''; tr.appendChild(tdWert);
+    // Status
+    const tdStatus = document.createElement('td');
+    const sel = document.createElement('select');
+    ['Offen','In Arbeit','Beendet'].forEach(s=>{
+      const opt = document.createElement('option'); opt.value=s; opt.textContent=s;
+      if ((row[3]||'').toLowerCase() === s.toLowerCase()) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', ()=>{
+      row[3] = sel.value;
+      updateKPIs(currentCustomer);
+      renderChart(currentCustomer);
+    });
+    tdStatus.appendChild(sel); tr.appendChild(tdStatus);
+
+    // Anhänge
+    const tdFiles = document.createElement('td');
+    const list = document.createElement('div'); list.className = 'file-list';
+    const renderFiles = ()=>{
+      list.innerHTML = '';
+      row[4].forEach((f, idx)=>{
+        const a = document.createElement('a'); a.href = f.url; a.download = f.name; a.textContent = f.name;
+        a.style.marginRight = '6px';
+        const rm = document.createElement('button'); rm.className='btn btn-ghost btn-sm'; rm.textContent='✕';
+        rm.addEventListener('click', ()=>{ row[4].splice(idx,1); renderFiles(); });
+        const wrap = document.createElement('span'); wrap.appendChild(a); wrap.appendChild(rm);
+        list.appendChild(wrap);
+      });
+    };
+    renderFiles();
+
+    const inp = document.createElement('input'); inp.type='file';
+    inp.addEventListener('change', async (e)=>{
+      const file = e.target.files?.[0]; if (!file) return;
+      const url = await fileToDataURL(file);
+      row[4].push({ name:file.name, url });
+      renderFiles(); inp.value='';
     });
 
-    updateKPIs(c);
+    tdFiles.appendChild(list); tdFiles.appendChild(inp);
+    tr.appendChild(tdFiles);
+
+    // Aktion
+    const tdAct = document.createElement('td');
+    const btnEdit = document.createElement('button'); btnEdit.className='btn btn-ghost btn-sm'; btnEdit.textContent='Bearbeiten';
+    let editing = false;
+    btnEdit.addEventListener('click', ()=>{
+      editing = !editing;
+      btnEdit.textContent = editing ? 'Speichern' : 'Bearbeiten';
+      tdTitle.contentEditable = editing ? 'true' : 'false';
+      tdWert.contentEditable  = editing ? 'true' : 'false';
+      if (!editing){
+        row[1] = tdTitle.textContent.trim();
+        row[2] = tdWert.textContent.trim();
+      }
+    });
+    tdAct.appendChild(btnEdit);
+    tr.appendChild(tdAct);
+
+    tbody.appendChild(tr);
+  });
 }
 
-function renderTable(type, data) {
-    const table = document.getElementById(`${type}Table`);
-    let headers = [];
-    let editable = false;
-
-    if (type === 'auftraege') {
-        headers = ["Auftragsnummer", "Titel", "Status", "Kategorie", "Betrag", "Startdatum", "Enddatum", "Verantwortlicher", "Dateien"];
-        table.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>`;
-        data.forEach(row => {
-            table.innerHTML += `<tr>${row.map(v => `<td>${v}</td>`).join("")}<td><input type='file'></td><td><button class="remove-row" onclick="removeRow(this, 'auftraege')">X</button></td></tr>`;
-        });
-    } else if (type === 'inventar') {
-        headers = ["Artikel-Nr.", "Name", "Kategorie", "Bestand", "Status", "Preis", "Verkaufspreis", "Lieferant"];
-        table.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>`;
-        data.forEach(row => {
-            table.innerHTML += `<tr>${row.map(v => `<td>${v}</td>`).join("")}<td><button class="remove-row" onclick="removeRow(this, 'inventar')">X</button></td></tr>`;
-        });
-    } else if (type === 'mitarbeiter') {
-        headers = ["Name", "Position", "Abteilung", "Status", "E-Mail", "Telefon", "Eintrittsdatum", "Vorgesetzter"];
-        table.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>`;
-        data.forEach(row => {
-            table.innerHTML += `<tr>${row.map(v => `<td>${v}</td>`).join("")}<td><button class="remove-row" onclick="removeRow(this, 'mitarbeiter')">X</button></td></tr>`;
-        });
-    }
+const btnAddOrder = document.getElementById('btnAddOrder');
+if (btnAddOrder){
+  btnAddOrder.addEventListener('click', ()=>{
+    const id = prompt("Auftrags-ID?");
+    if (!id) return;
+    const titel = prompt("Titel?") || "";
+    const wert = prompt("Wert (€)?") || "";
+    const status = "Offen";
+    currentCustomer.auftraege.push([id, titel, wert, status, []]);
+    renderOrdersTable(currentCustomer.auftraege);
+    updateKPIs(currentCustomer);
+    renderChart(currentCustomer);
+  });
 }
 
-function addNewRow(type) {
-    const table = document.getElementById(`${type}Table`);
-    let headers = [];
-    if (type === 'auftraege') {
-        headers = ["Auftragsnummer", "Titel", "Status", "Kategorie", "Betrag", "Startdatum", "Enddatum", "Verantwortlicher"];
-        const newRow = document.createElement('tr');
-        newRow.className = 'editable-row';
-        newRow.innerHTML = headers.map(h => `<td><input type="text" placeholder="${h}"></td>`).join("") + '<td><input type="file"></td><td><button class="remove-row" onclick="removeRow(this, \'auftraege\')">X</button></td>';
-        table.appendChild(newRow);
-        customers[Object.keys(customers)[0]][type].push([]);
-    } else if (type === 'inventar') {
-        headers = ["Artikel-Nr.", "Name", "Kategorie", "Bestand", "Status", "Preis", "Verkaufspreis", "Lieferant"];
-        const newRow = document.createElement('tr');
-        newRow.className = 'editable-row';
-        newRow.innerHTML = headers.map(h => `<td><input type="text" placeholder="${h}"></td>`).join("") + '<td><button class="remove-row" onclick="removeRow(this, \'inventar\')">X</button></td>';
-        table.appendChild(newRow);
-        customers[Object.keys(customers)[0]][type].push([]);
-    } else if (type === 'mitarbeiter') {
-        headers = ["Name", "Position", "Abteilung", "Status", "E-Mail", "Telefon", "Eintrittsdatum", "Vorgesetzter"];
-        const newRow = document.createElement('tr');
-        newRow.className = 'editable-row';
-        newRow.innerHTML = headers.map(h => `<td><input type="text" placeholder="${h}"></td>`).join("") + '<td><button class="remove-row" onclick="removeRow(this, \'mitarbeiter\')">X</button></td>';
-        table.appendChild(newRow);
-        customers[Object.keys(customers)[0]][type].push([]);
-    }
-    updateKPIs(customers[Object.keys(customers)[0]]);
+// =================== Inventar & Mitarbeiter ==============================
+function renderSimpleMatrix(tbodyId, arr, editableColsIdx){
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  (arr||[]).forEach((row, rIdx)=>{
+    const tr = document.createElement('tr');
+    row.forEach((cell)=>{
+      const td = document.createElement('td'); td.textContent = cell ?? '';
+      tr.appendChild(td);
+    });
+    const tdAct = document.createElement('td');
+    const btnEdit = document.createElement('button'); btnEdit.className='btn btn-ghost btn-sm'; btnEdit.textContent='Bearbeiten';
+    let editing = false;
+    btnEdit.addEventListener('click', ()=>{
+      editing = !editing;
+      btnEdit.textContent = editing ? 'Speichern' : 'Bearbeiten';
+      editableColsIdx.forEach(idx=>{
+        const td = tr.children[idx];
+        td.contentEditable = editing ? 'true' : 'false';
+        if (!editing){
+          row[idx] = td.textContent.trim();
+        }
+      });
+    });
+    const btnDel = document.createElement('button'); btnDel.className='btn btn-ghost btn-sm'; btnDel.textContent='✕';
+    btnDel.style.marginLeft='6px';
+    btnDel.addEventListener('click', ()=>{
+      arr.splice(rIdx,1);
+      renderSimpleMatrix(tbodyId, arr, editableColsIdx);
+    });
+    tdAct.appendChild(btnEdit); tdAct.appendChild(btnDel); tr.appendChild(tdAct);
+    tbody.appendChild(tr);
+  });
 }
 
-function removeRow(button, type) {
-    const row = button.parentElement.parentElement;
-    row.parentElement.removeChild(row);
-    customers[Object.keys(customers)[0]][type].splice(row.rowIndex - 1, 1);
-    updateKPIs(customers[Object.keys(customers)[0]]);
+const btnAddInventar = document.getElementById('btnAddInventar');
+if (btnAddInventar){
+  btnAddInventar.addEventListener('click', ()=>{
+    const id = prompt("Inventar-ID?"); if (!id) return;
+    const artikel = prompt("Artikel?") || "";
+    const menge = prompt("Menge?") || "1";
+    const standort = prompt("Standort?") || "";
+    currentCustomer.inventar.push([id, artikel, menge, standort]);
+    renderSimpleMatrix('inventarTbody', currentCustomer.inventar, [1,2,3]);
+  });
+}
+const btnAddStaff = document.getElementById('btnAddStaff');
+if (btnAddStaff){
+  btnAddStaff.addEventListener('click', ()=>{
+    const id = prompt("Mitarbeiter-ID?"); if (!id) return;
+    const name = prompt("Name?") || "";
+    const rolle = prompt("Rolle?") || "";
+    const mail = prompt("E-Mail?") || "";
+    currentCustomer.mitarbeiter.push([id, name, rolle, mail]);
+    renderSimpleMatrix('staffTbody', currentCustomer.mitarbeiter, [1,2,3]);
+  });
 }
 
-function updateKPIs(c) {
-    document.getElementById("auftraegeGesamt").textContent = c.auftraege.length;
-    document.getElementById("auftraegeAktiv").textContent = c.auftraege.filter(a => a[2] !== "Beendet").length;
-    document.getElementById("auftraegeWert").textContent = "€" + c.auftraege.filter(a => a[2] !== "Beendet").reduce((sum, a) => sum + parseFloat(a[4].replace(/[^0-9.-]+/g, "") || 0), 0).toFixed(3).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+// =================== Laden & Init =======================================
+function loadCustomer(key){
+  currentKey = key;
+  currentCustomer = customers[key];
 
-    document.getElementById("inventarGesamt").textContent = c.inventar.length;
-    document.getElementById("inventarNiedrig").textContent = c.inventar.filter(i => i[4] === "Niedrig").length;
-    document.getElementById("inventarKategorien").textContent = new Set(c.inventar.map(i => i[2])).size;
+  renderCustomerList();
 
-    document.getElementById("mitarbeiterGesamt").textContent = c.mitarbeiter.length;
-    document.getElementById("mitarbeiterAktiv").textContent = c.mitarbeiter.filter(m => m[3] === "Aktiv").length;
-    document.getElementById("mitarbeiterAbteilungen").textContent = new Set(c.mitarbeiter.map(m => m[2])).size;
+  renderSimpleList('aktuellesList', currentCustomer.aktuelles || []);
+  renderSimpleList('deadlinesList', currentCustomer.deadlines || []);
+  renderSimpleList('planungList',  currentCustomer.planung  || []);
+  renderContactsList(currentCustomer.contacts || []);
+  renderCalendarList();
+
+  updateKPIs(currentCustomer);
+  renderChart(currentCustomer);
+
+  renderOrdersTable(currentCustomer.auftraege || []);
+  renderSimpleMatrix('inventarTbody', currentCustomer.inventar || [], [1,2,3]);
+  renderSimpleMatrix('staffTbody', currentCustomer.mitarbeiter || [], [1,2,3]);
+
+  makeTablesSortable();
 }
 
-loadCustomer('A');
+(function init(){
+  const firstKey = Object.keys(customers)[0];
+  loadCustomer(firstKey);
+})();
