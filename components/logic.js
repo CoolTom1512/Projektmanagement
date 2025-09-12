@@ -231,15 +231,22 @@ function renderChart(cust){
   if (ordersChart) ordersChart.destroy();
   ordersChart = new Chart(ctx, {
     type:'doughnut',
-    data:{ labels:['Offen','Beendet'], datasets:[{ data }] },
+    data:{ labels:['Offen','Beendet'],
+      datasets:[{ data }] },
     options:{
       responsive:true,
       maintainAspectRatio:false, /* -> nutzt chart-wrap Höhe */
       cutout:'55%',
       plugins:{
         tooltip:{ enabled:false },
-        legend:{ position:'bottom' },
+        legend:{
+          position:'bottom',
+          labels:{
+            color:'#f7f9ff' // or use generateLabels to match slice colors
+          }
+        },
         datalabels:{
+          color:(ctx)=> ctx.dataIndex === 0 ? '#6aa6ff' : '#4ade80',
   formatter:(value,ctx)=>{
     const label = ctx.chart.data.labels[ctx.dataIndex];
     const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0) || 1;
@@ -251,7 +258,7 @@ function renderChart(cust){
   textAlign:'center',
   color:'#f8faff',                // hellere Schrift
   font:{ weight:'bold', size:12 }, // größer, fetter
-  textStrokeColor:'#000',         
+  textStrokeColor:'#000',
   textStrokeWidth:1.5,              // sorgt für Kontrast
   shadowBlur:4,                   // weicher Shadow
   shadowColor:'rgba(0,0,0,.8)'    // dunkler Schatten für besseren Kontrast
